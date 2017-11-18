@@ -9,7 +9,6 @@ Author: Peter Schrammel
 #ifdef DEBUG
 #include <iostream>
 #endif
-
 #include <solvers/sat/satcheck.h>
 #include <solvers/flattening/bv_pointers.h>
 #include <util/find_symbols.h>

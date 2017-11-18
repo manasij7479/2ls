@@ -7,6 +7,7 @@ Author: Peter Schrammel
 \*******************************************************************/
 
 #include <iostream>
+#include <fstream>
 
 #include <util/options.h>
 #include <util/i2string.h>
@@ -38,6 +39,105 @@ Author: Peter Schrammel
 #include "instrument_goto.h"
 
 #include "summary_checker_base.h"
+#include "../domains/incremental_solver.h"
+#include <solvers/smt2/smt2_dec.h>
+#include <solvers/smt2/z3_conv.h>
+
+#include <unordered_set>
+
+typedef enum { D_SATISFIABLE, D_UNSATISFIABLE, D_ERROR } resultt;
+template <typename solvert>
+void print_symbol_values(
+  const local_SSAt &SSA,
+  solvert &solver,
+  std::ostream &out,
+  exprt expr)
+{
+  static std::unordered_set<irep_idt, irep_id_hash> seen;
+  if(expr.id()==ID_symbol)
+  {
+    auto name = to_symbol_expr(expr).get_identifier();
+    if (seen.find(name) == seen.end()) {
+      out << from_expr(SSA.ns, "", expr) << "=="
+        << from_expr(SSA.ns, "", solver.get(expr)) << "\n";
+    }
+    seen.insert(name);
+    return;
+  }
+  for(exprt::operandst::const_iterator it=expr.operands().begin();
+      it!=expr.operands().end(); it++)
+  {
+    print_symbol_values(SSA, solver, out, *it);
+  }
+}
+bool is_guard(exprt e, const namespacet &ns) {
+  if (e.id() == ID_not) {
+    e = e.op0();
+    if (e.id() == ID_symbol) {
+      auto name = from_expr(ns, " ", e);
+      if (name[0] == '$' && name[1] == 'g')
+        return true;
+    }
+  }
+  return false;
+}
+
+void CustomSSAOperation(local_SSAt &SSA, const namespacet &ns, const dstring name) {
+  std::ofstream out("output.txt");
+  out << "Custom SSA hook : " << name <<" \n";
+  // incremental_solvert solver(ns);
+  z3_convt solver(ns);
+  // smt2_dect solver(ns, "accelerate", "", "", smt2_dect::Z3);
+
+  solver << SSA;
+  solver << SSA.get_enabling_exprs();
+
+  for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
+      n_it!=SSA.nodes.end(); n_it++)
+  {
+
+    for(local_SSAt::nodet::assertionst::const_iterator
+          c_it=n_it->assertions.begin();
+          c_it!=n_it->assertions.end();
+        c_it++)
+    {
+      out << from_expr(ns, " ", *c_it) << std::endl;
+      auto e = *c_it;
+      if (e.operands().size() == 2)
+      {
+        auto e0 = c_it->op0();
+        auto e1 = c_it->op1();
+        if (is_guard(e0, ns)) {
+          e1 = not_exprt(e1);
+        } else if (is_guard(e1, ns)) {
+          e0 = not_exprt(e0);
+        } else {
+          throw 42;
+        }
+        e = or_exprt(e0, e1);
+      }
+      out << "ASSERT: " << from_expr(ns, " ", e) << "\n";
+      solver << e;
+    }
+
+  }
+  if (solver() == D_SATISFIABLE) {
+    out << "sat\nModel:\n";
+
+    for(local_SSAt::nodest::const_iterator n_it=
+        SSA.nodes.begin(); n_it!=SSA.nodes.end(); n_it++)
+    {
+      for(local_SSAt::nodet::equalitiest::const_iterator e_it=
+            n_it->equalities.begin(); e_it!=n_it->equalities.end(); e_it++)
+      {
+        print_symbol_values(SSA, solver, out, *e_it);
+      }
+    }
+
+  } else {
+    out << "unsat\n";
+  }
+}
 
 /*******************************************************************\
 
@@ -56,6 +156,7 @@ void summary_checker_baset::SSA_functions(
   const namespacet &ns)
 {
   // compute SSA for all the functions
+
   forall_goto_functions(f_it, goto_model.goto_functions)
   {
     if(!f_it->second.body_available())
@@ -79,6 +180,9 @@ void summary_checker_baset::SSA_functions(
 
   // properties
   initialize_property_map(goto_model.goto_functions);
+
+  CustomSSAOperation(ssa_db.get("main"), ns, "main");
+
 }
 
 /*******************************************************************\

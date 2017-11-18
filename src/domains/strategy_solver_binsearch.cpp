@@ -137,7 +137,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
     solver << post_inv_expr;
 
-#if 0
+#if 1
     debug() << "symbolic value system: " << eom;
     debug() << "pre-inv: " << from_expr(ns, "", pre_inv_expr) << eom;
     debug() << "post-inv: " << from_expr(ns, "", post_inv_expr) << eom;
@@ -154,7 +154,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       exprt c=
         tpolyhedra_domain.get_row_symb_value_constraint(row, middle, true);
 
-#if 0
+#if 1
       debug() << "upper: " << from_expr(ns, "", upper) << eom;
       debug() << "middle: " << from_expr(ns, "", middle) << eom;
       debug() << "lower: " << from_expr(ns, "", lower) << eom;
@@ -162,7 +162,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
       solver.new_context(); // binary search iteration
 
-#if 0
+#if 1
       debug() << "constraint: " << from_expr(ns, "", c) << eom;
 #endif
 
@@ -170,11 +170,11 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
       if(solver()==decision_proceduret::D_SATISFIABLE)
       {
-#if 0
+#if 1
         debug() << "SAT" << eom;
 #endif
 
-#if 0
+#if 1
         for(std::size_t i=0; i<tpolyhedra_domain.template_size(); i++)
         {
           debug() << from_expr(ns, "", tpolyhedra_domain.get_row_symb_value(i))
@@ -201,7 +201,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       }
       else
       {
-#if 0
+#if 1
         debug() << "UNSAT" << eom;
 #endif
 
@@ -231,7 +231,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
   }
   else
   {
-#if 0
+#if 1
     debug() << "UNSAT" << eom;
 #endif
 
@@ -247,6 +247,8 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
     solver.pop_context(); // improvement check
   }
-
+#if 1
+    debug () << "END BINSEARCH " << improved << "\n" << eom;
+#endif
   return improved;
 }
