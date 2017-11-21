@@ -21,3 +21,4 @@ tests.log
 src/2ls/2ls
 .vscode/c_cpp_properties.json
 src/config.inc.bak
+.vscode/settings.json
