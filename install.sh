@@ -13,6 +13,7 @@ cd cbmc
 CBMC=`pwd`
 git checkout $CBMC_VERSION
 make -C src minisat2-download
+make -C src z3-download z3-build
 if [ "$COMPILER" != "" ]
 then
   make -C src CXX=$COMPILER

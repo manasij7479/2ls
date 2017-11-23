@@ -5,6 +5,7 @@ CBMC = ~/my-cbmc
 
 #static compilation
 #LINKFLAGS += -static-libgcc -static-libstdc++
+LINKFLAGS += -fopenmp
 
 #2LS switches
 TWOLS_FLAGS = 
