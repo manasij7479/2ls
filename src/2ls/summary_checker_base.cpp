@@ -54,6 +54,8 @@ void print_symbol_values(
   exprt expr)
 {
   static std::unordered_set<irep_idt, irep_id_hash> seen;
+  if (expr.id()==ID_forall)
+    return;
   if(expr.id()==ID_symbol)
   {
     auto name = to_symbol_expr(expr).get_identifier();
