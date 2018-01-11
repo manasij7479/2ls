@@ -44,8 +44,9 @@ Author: Peter Schrammel
 #include <solvers/smt2/z3_conv.h>
 
 #include <unordered_set>
+#include <z3++.h>
 
-typedef enum { D_SATISFIABLE, D_UNSATISFIABLE, D_ERROR } resultt;
+// typedef enum { D_SATISFIABLE, D_UNSATISFIABLE, D_ERROR } resultt;
 template <typename solvert>
 void print_symbol_values(
   const local_SSAt &SSA,
@@ -88,6 +89,7 @@ void CustomSSAOperation(local_SSAt &SSA, const namespacet &ns, const dstring nam
   std::ofstream out("output.txt");
   out << "Custom SSA hook : " << name <<" \n";
   // incremental_solvert solver(ns);
+  z3::set_param("proof", "true"); 
   z3_convt solver(ns);
   // smt2_dect solver(ns, "accelerate", "", "", smt2_dect::Z3);
 
@@ -183,7 +185,7 @@ void summary_checker_baset::SSA_functions(
   // properties
   initialize_property_map(goto_model.goto_functions);
 
-  CustomSSAOperation(ssa_db.get("main"), ns, "main");
+  // CustomSSAOperation(ssa_db.get("main"), ns, "main");
 
 }
 
@@ -328,16 +330,20 @@ void summary_checker_baset::check_properties(
 
   exprt enabling_expr=SSA.get_enabling_exprs();
   solver << enabling_expr;
-
+  
   // invariant, calling contexts
   if(summary_db.exists(f_it->first))
   {
     solver << summary_db.get(f_it->first).fw_invariant;
     solver << summary_db.get(f_it->first).fw_precondition;
+    // out << "FW_PRE " << from_expr(SSA.ns, "", summary_db.get(f_it->first).fw_precondition) << "\n\n";
   }
 
   // callee summaries
   solver << ssa_inliner.get_summaries(SSA);
+
+  std::ofstream out("/tmp/summary.txt");
+  summary_db.get("foo").output(out, SSA.ns);
 
   // freeze loop head selects
   exprt::operandst loophead_selects=
