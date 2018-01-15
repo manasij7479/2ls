@@ -342,8 +342,8 @@ void summary_checker_baset::check_properties(
   // callee summaries
   solver << ssa_inliner.get_summaries(SSA);
 
-  std::ofstream out("/tmp/summary.txt");
-  summary_db.get("foo").output(out, SSA.ns);
+  // std::ofstream out("/tmp/summary.txt");
+  // summary_db.get("foo").output(out, SSA.ns, SSA);
 
   // freeze loop head selects
   exprt::operandst loophead_selects=

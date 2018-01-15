@@ -98,7 +98,7 @@ void summarizer_bw_termt::compute_summary_rec(
   {
     std::ostringstream out;
     out << std::endl << "Summary for function " << function_name << std::endl;
-    summary_db.get(function_name).output(out, SSA.ns);
+    summary_db.get(function_name).output(out, SSA.ns, SSA);
     status() << out.str() << eom;
   }
 }

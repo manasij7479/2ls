@@ -140,6 +140,10 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
   if(cmdline.isset("unwindset"))
     options.set_option("unwindset", cmdline.get_value("unwindset"));
 
+  options.set_option("simplify-ssa", false);
+  if(cmdline.isset("simplify-ssa"))
+    options.set_option("simplify-ssa", cmdline.get_value("simplify-ssa"));
+
   if(cmdline.isset("unwind"))
   {
     options.set_option("unwind", cmdline.get_value("unwind"));

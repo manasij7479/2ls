@@ -11,6 +11,7 @@ Author: Peter Schrammel
 #endif
 
 #include <domains/util.h>
+#include "../ssa/simplify_ssa.h"
 
 #include "summary.h"
 
@@ -28,8 +29,10 @@ Function: summaryt::output
 
 \*******************************************************************/
 
-void summaryt::output(std::ostream &out, const namespacet &ns) const
+void summaryt::output(std::ostream &out, const namespacet &ns,
+  local_SSAt& ssa) const
 {
+  // ssa_simplifiert simplifier(ssa, ns);
   out << "params: ";
   for(summaryt::var_listt::const_iterator it=params.begin();
       it!=params.end(); it++)
@@ -51,6 +54,11 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
   out << "forward transformer: "
       << (fw_transformer.is_nil() ? "not computed" :
     from_expr(ns, "", fw_transformer)) << std::endl;
+
+  // out << "forward transformer simplified: "
+  //     << (fw_transformer.is_nil() ? "not computed" :
+  //   from_expr(ns, "", simplifier.simplify_expr_recursive(fw_transformer))) << std::endl;
+
   out << "forward invariant: "
       << (fw_invariant.is_nil() ? "not computed" :
     from_expr(ns, "", fw_invariant)) << std::endl;
@@ -63,6 +71,11 @@ void summaryt::output(std::ostream &out, const namespacet &ns) const
   out << "backward transformer: "
       << (bw_transformer.is_nil() ? "not computed" :
     from_expr(ns, "", bw_transformer)) << std::endl;
+
+  // out << "backward transformer simplified: "
+  //     << (bw_transformer.is_nil() ? "not computed" :
+  //   from_expr(ns, "", simplifier.simplify_expr_recursive(bw_transformer))) << std::endl;
+
   out << "backward invariant: "
       << (bw_invariant.is_nil() ? "not computed" :
     from_expr(ns, "", bw_invariant)) << std::endl;

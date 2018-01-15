@@ -36,10 +36,10 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 
   exprt inv_expr=tpolyhedra_domain.to_pre_constraints(inv);
 
-#if 0
+// #if 0
   debug() << "improvement check: " << eom;
   debug() << "pre-inv: " << from_expr(ns, "", inv_expr) << eom;
-#endif
+// #endif
 
   solver << inv_expr;
 
@@ -54,9 +54,10 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #endif
   for(std::size_t i=0; i<strategy_cond_exprs.size(); i++)
   {
-#if 0
-    debug() << (i>0 ? " || " : "") << from_expr(ns, "", strategy_cond_exprs[i]);
-#endif
+// #if 0
+    debug() << "SOLVE : " << (i>0 ? " || " : "") << from_expr(ns, "", strategy_cond_exprs[i]) << "\n";
+    
+// #endif
     strategy_cond_literals[i]=solver.convert(strategy_cond_exprs[i]);
     // solver.set_frozen(strategy_cond_literals[i]);
     strategy_cond_exprs[i]=literal_exprt(strategy_cond_literals[i]);
@@ -66,6 +67,7 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
 #endif
 
   solver << disjunction(strategy_cond_exprs);
+  // debug() << "SOLVE : " << from_expr(ns, "", disjunction(strategy_cond_exprs)) << "\n";
 
 #if 0
   debug() << "solve(): ";
@@ -154,17 +156,17 @@ bool strategy_solver_binsearcht::iterate(invariantt &_inv)
       exprt c=
         tpolyhedra_domain.get_row_symb_value_constraint(row, middle, true);
 
-#if 1
+// #if 1
       debug() << "upper: " << from_expr(ns, "", upper) << eom;
       debug() << "middle: " << from_expr(ns, "", middle) << eom;
       debug() << "lower: " << from_expr(ns, "", lower) << eom;
-#endif
+// #endif
 
       solver.new_context(); // binary search iteration
 
-#if 1
+// #if 1
       debug() << "constraint: " << from_expr(ns, "", c) << eom;
-#endif
+// #endif
 
       solver << c;
 

@@ -151,7 +151,7 @@ void summarizer_fw_termt::compute_summary_rec(
   {
     std::ostringstream out;
     out << std::endl << "Summary for function " << function_name << std::endl;
-    summary.output(out, SSA.ns);
+    summary.output(out, SSA.ns, SSA);
     status() << out.str() << eom;
   }
 

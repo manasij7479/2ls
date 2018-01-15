@@ -10,6 +10,10 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include "simplify_ssa.h"
 #include "../domains/incremental_solver.h"
+#include <util/std_expr.h>
+#include <util/arith_tools.h>
+#include <util/expr_util.h>
+#include "2ls/2ls_parse_options.h"
 #include <fstream>
 
 /*******************************************************************\
@@ -48,19 +52,13 @@ exprt find_guard(local_SSAt::nodet &node, const namespacet &ns) {
 
   return result;
 }
-
 void simplify(local_SSAt &ssa, const namespacet &ns)
 {
-  // std::ofstream out("/tmp/out.txt");
-  // typedef enum { D_SATISFIABLE, D_UNSATISFIABLE, D_ERROR } resultt;
-  // incremental_solvert solver(ns);
-  // solver << ssa;
-  // solver << ssa.get_enabling_exprs();
+  auto name =ssa.goto_function;
+  // std::ofstream before("/tmp/before.txt", std::fstream::app);
+  // std::ofstream after("/tmp/after.txt", std::fstream::app);
 
-  std::ofstream before("/tmp/before.txt");
-  std::ofstream after("/tmp/after.txt");
-
-  ssa.output_verbose(before);
+  // ssa.output_verbose(before);
 
   ssa_simplifiert simplifier(ssa, ns);
   for(local_SSAt::nodest::iterator
@@ -80,9 +78,14 @@ void simplify(local_SSAt &ssa, const namespacet &ns)
 
       e_it->lhs()=simplify_expr(e_it->lhs(), ns);
       e_it->rhs()=simplify_expr(e_it->rhs(), ns);
-
+      
+      // if (options.get_bool_option("simplify-ssa")) {
+      // simplifier.internalize(*e_it);
       e_it->rhs() = simplifier.simplify_expr(e_it->rhs());
-      e_it->rhs() = simplifier.simplify_expr_cs(e_it->rhs(), guard);
+      // if (!is_guard_s(e_it->lhs(), ns)) {
+      //   e_it->rhs() = simplifier.simplify_expr_cs(e_it->rhs(), guard);
+      // }
+      // }
       
     }
 
@@ -102,7 +105,7 @@ void simplify(local_SSAt &ssa, const namespacet &ns)
       *a_it=simplify_expr(*a_it, ns);
     }
   }
-  ssa.output_verbose(after);
+  // ssa.output_verbose(after);
 }
 
 exprt ssa_simplifiert::simplify_expr(exprt in) {
@@ -111,11 +114,24 @@ exprt ssa_simplifiert::simplify_expr(exprt in) {
       in = simplify_expr_to(in, true_exprt());
       in = simplify_expr_to(in, false_exprt());
     }
-  } else if (in.type().id() == ID_signed_int ) {
-    in = simplify_expr_to(in, constant_exprt(0, in.type()));
+  } else if (in.type().id() == ID_signedbv ) {
+
+    // in = simplify_expr_to(in, gen_zero(in.type()));
+
+    if (in.id() == ID_if) {
+      // out << "CID : " << in.op0().type().id() << "\n";
+      if (simplify_expr_to(in.op0(), true_exprt()) == true_exprt()) {
+        return in.op1();
+      } else if (simplify_expr_to(in.op0(), false_exprt()) == false_exprt()) {
+        return in.op2();
+      }
+    }
+  } else {
+    // out << "BADTYPE : " <<  in.type().id() << " : " << from_expr(ns, "", in) << "\n";
   }
   return in;
 }
+
 exprt ssa_simplifiert::simplify_expr_cs(exprt in, exprt context) {
   exprt result;
   solver.new_context();
@@ -125,18 +141,60 @@ exprt ssa_simplifiert::simplify_expr_cs(exprt in, exprt context) {
   return result;
 }
 
+exprt ssa_simplifiert::simplify_expr_recursive(exprt in) {
+  // if (in.type().id() == ID_bool) {
+  //   if (in != true_exprt() && in != false_exprt()) {
+  //     in = simplify_expr_to(in, true_exprt());
+  //     in = simplify_expr_to(in, false_exprt());
+  //   } else if (in.id() == ID_and) {
+  //     return and_exprt(simplify_expr_recursive(in.op0()),
+  //                     simplify_expr_recursive(in.op1()));
+  //   } else if (in.id() == ID_or) {
+  //     return or_exprt(simplify_expr_recursive(in.op0()),
+  //                     simplify_expr_recursive(in.op1()));
+  //   } else if (in.id() == ID_if) {
+  //     if (simplify_expr_to(in.op0(), true_exprt()) == true_exprt()) {
+  //       return simplify_expr_recursive(in.op1());
+  //     } else if (simplify_expr_to(in.op0(), false_exprt()) == false_exprt()) {
+  //       return simplify_expr_recursive(in.op2());
+  //     }
+  //   }
+
+  // } else if (in.type().id() == ID_signedbv ) {
+
+  //   // in = simplify_expr_to(in, gen_zero(in.type()));
+
+  //   if (in.id() == ID_if) {
+  //     // out << "CID : " << in.op0().type().id() << "\n";
+  //     if (simplify_expr_to(in.op0(), true_exprt()) == true_exprt()) {
+  //       return simplify_expr_recursive(in.op1());
+  //     } else if (simplify_expr_to(in.op0(), false_exprt()) == false_exprt()) {
+  //       return simplify_expr_recursive(in.op2());
+  //     }
+  //   }
+  // } else {
+  //   // out << "BADTYPE : " <<  in.type().id() << " : " << from_expr(ns, "", in) << "\n";
+  // }
+  return in;
+}
+
 exprt ssa_simplifiert::simplify_expr_to(exprt in, exprt target) {
   if (in != target) {
     solver.new_context();
 
     solver << not_exprt(equal_exprt(in, target));
-
+    // out << "TRY: " << from_expr(ns, " ", in) << " to " <<
+    //        from_expr(ns, " ", target) << std::endl;
     if (solver() == D_UNSATISFIABLE) {
-      out << "TRY: " << from_expr(ns, " ", in) << std::endl;
       in = target;
-      out << "RESULT: " <<  from_expr(ns, " ", in) << std::endl;
-    }
+       // out << "RESULT: " <<  from_expr(ns, " ", in) << std::endl;
+    }// else {
+    //     out << "COULD NOT SIMPLIFY\n";
+    //  }
     solver.pop_context();
   }
   return in;
+}
+void ssa_simplifiert::internalize(exprt in) {
+  solver << in;
 }

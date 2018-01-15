@@ -13,6 +13,7 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <set>
 
 #include <util/std_expr.h>
+#include <ssa/local_ssa.h>
 
 typedef enum {YES, NO, UNKNOWN} threevalt;
 
@@ -54,7 +55,7 @@ class summaryt
   bool mark_recompute; // to force recomputation of the summary
                        // (used for invariant reuse in k-induction)
 
-  void output(std::ostream &out, const namespacet &ns) const;
+  void output(std::ostream &out, const namespacet &ns, local_SSAt& ssa) const;
 
   void join(const summaryt &new_summary);
 
