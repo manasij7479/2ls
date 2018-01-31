@@ -31,12 +31,15 @@ public:
   exprt simplify_expr_cs(exprt in, exprt context);
   exprt simplify_expr_to(exprt in, exprt target);
   exprt simplify_expr_recursive(exprt in);
-  void internalize(exprt in);
+  void internalize(local_SSAt::nodet::equalitiest::iterator in);
+  void record(local_SSAt::nodet::equalitiest::iterator in);
 private:
   local_SSAt& SSA;
   const namespacet& ns;
   incremental_solvert solver;
   std::ofstream out;
+  
+  replace_mapt map;
 };
 
 #endif

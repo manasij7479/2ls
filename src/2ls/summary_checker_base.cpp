@@ -87,60 +87,73 @@ bool is_guard(exprt e, const namespacet &ns) {
 
 void CustomSSAOperation(local_SSAt &SSA, const namespacet &ns, const dstring name) {
   std::ofstream out("output.txt");
-  out << "Custom SSA hook : " << name <<" \n";
-  // incremental_solvert solver(ns);
-  z3::set_param("proof", "true"); 
-  z3_convt solver(ns);
-  // smt2_dect solver(ns, "accelerate", "", "", smt2_dect::Z3);
+  // out << "Custom SSA hook : " << name <<" \n";
+  // // incremental_solvert solver(ns);
+  // z3::set_param("proof", "true"); 
+  // z3_convt solver(ns);
+  // // smt2_dect solver(ns, "accelerate", "", "", smt2_dect::Z3);
 
-  solver << SSA;
-  solver << SSA.get_enabling_exprs();
+  // solver << SSA;
+  // solver << SSA.get_enabling_exprs();
 
-  for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
-      n_it!=SSA.nodes.end(); n_it++)
-  {
+  // for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
+  //     n_it!=SSA.nodes.end(); n_it++)
+  // {
 
-    for(local_SSAt::nodet::assertionst::const_iterator
-          c_it=n_it->assertions.begin();
-          c_it!=n_it->assertions.end();
-        c_it++)
-    {
-      out << from_expr(ns, " ", *c_it) << std::endl;
-      auto e = *c_it;
-      if (e.operands().size() == 2)
-      {
-        auto e0 = c_it->op0();
-        auto e1 = c_it->op1();
-        if (is_guard(e0, ns)) {
-          e1 = not_exprt(e1);
-        } else if (is_guard(e1, ns)) {
-          e0 = not_exprt(e0);
-        } else {
-          throw 42;
-        }
-        e = or_exprt(e0, e1);
-      }
-      out << "ASSERT: " << from_expr(ns, " ", e) << "\n";
-      solver << e;
-    }
+  //   for(local_SSAt::nodet::assertionst::const_iterator
+  //         c_it=n_it->assertions.begin();
+  //         c_it!=n_it->assertions.end();
+  //       c_it++)
+  //   {
+  //     out << from_expr(ns, " ", *c_it) << std::endl;
+  //     auto e = *c_it;
+  //     if (e.operands().size() == 2)
+  //     {
+  //       auto e0 = c_it->op0();
+  //       auto e1 = c_it->op1();
+  //       if (is_guard(e0, ns)) {
+  //         e1 = not_exprt(e1);
+  //       } else if (is_guard(e1, ns)) {
+  //         e0 = not_exprt(e0);
+  //       } else {
+  //         throw 42;
+  //       }
+  //       e = or_exprt(e0, e1);
+  //     }
+  //     out << "ASSERT: " << from_expr(ns, " ", e) << "\n";
+  //     solver << e;
+  //   }
 
-  }
-  if (solver() == D_SATISFIABLE) {
-    out << "sat\nModel:\n";
+  // }
+  // if (solver() == D_SATISFIABLE) {
+  //   out << "sat\nModel:\n";
 
-    for(local_SSAt::nodest::const_iterator n_it=
-        SSA.nodes.begin(); n_it!=SSA.nodes.end(); n_it++)
-    {
-      for(local_SSAt::nodet::equalitiest::const_iterator e_it=
-            n_it->equalities.begin(); e_it!=n_it->equalities.end(); e_it++)
-      {
-        print_symbol_values(SSA, solver, out, *e_it);
-      }
-    }
+  //   for(local_SSAt::nodest::const_iterator n_it=
+  //       SSA.nodes.begin(); n_it!=SSA.nodes.end(); n_it++)
+  //   {
+  //     for(local_SSAt::nodet::equalitiest::const_iterator e_it=
+  //           n_it->equalities.begin(); e_it!=n_it->equalities.end(); e_it++)
+  //     {
+  //       print_symbol_values(SSA, solver, out, *e_it);
+  //     }
+  //   }
 
-  } else {
-    out << "unsat\n";
-  }
+  // } else {
+  //   out << "unsat\n";
+  // }
+  incremental_solvert solver(ns);
+  
+  local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
+  n_it++;
+  local_SSAt::nodet::equalitiest::const_iterator c_it=n_it->equalities.begin();//Here *c_it is x#1==TRUE
+
+  symbol_exprt s(dstring("x"), c_bool_typet(8));
+
+  out << from_expr(ns, "", s) << "\t" << from_expr((*c_it).op0()) << std::endl;
+  out << s.type().id() << "\t" << (*c_it).op0().type().id() << std::endl;
+  equal_exprt e((*c_it).op0(),s);
+  
+  solver<<e;
 }
 
 /*******************************************************************\
@@ -181,6 +194,17 @@ void summary_checker_baset::SSA_functions(
 
     SSA.output(debug()); debug() << eom;
   }
+
+  // std::ofstream out("/tmp/ssa.out", std::fstream::app);
+  // forall_goto_functions(f_it, goto_model.goto_functions)
+  // { 
+  //   if (ssa_db.exists(f_it->first))
+  //   {
+  //     local_SSAt &SSA=ssa_db.get(f_it->first);
+  //     SSA.output(out);
+  //     out << "END\n";
+  //   }
+  // }
 
   // properties
   initialize_property_map(goto_model.goto_functions);

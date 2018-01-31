@@ -7,7 +7,7 @@ Author: Peter Schrammel
 \*******************************************************************/
 
 #include "summary_checker_bmc.h"
-
+#include <fstream>
 
 /*******************************************************************\
 
@@ -27,6 +27,17 @@ property_checkert::resultt summary_checker_bmct::operator()(
   const namespacet ns(goto_model.symbol_table);
 
   SSA_functions(goto_model, ns);
+
+  // std::ofstream out("/tmp/ssa.out", std::fstream::app);
+  // forall_goto_functions(f_it, goto_model.goto_functions)
+  // { 
+  //   if (ssa_db.exists(f_it->first))
+  //   {
+  //     local_SSAt &SSA=ssa_db.get(f_it->first);
+  //     SSA.output(out);
+  //     out << "END\n";
+  //   }
+  // }
 
   ssa_unwinder.init(false, true);
 
