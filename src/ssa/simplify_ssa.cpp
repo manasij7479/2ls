@@ -37,6 +37,27 @@ bool is_guard_s(exprt e, const namespacet &ns) {
   return false;
 }
 
+// bool is_cond_s(exprt e, const namespacet &ns) {
+//   if (e.id() == ID_symbol) {
+//     auto name = from_expr(ns, " ", e);
+//     if (name[0] == '$' && name[1] == 'c' && name[2] == 'o')
+//       return true;
+//   }
+//   return false;
+// }
+
+bool is_other(exprt e, const namespacet &ns) {
+  if (e.id() == ID_symbol) {
+    auto name = from_expr(ns, " ", e);
+    if (name[0] == '_')
+      return true;
+  }
+  return false;
+}
+
+
+
+
 exprt find_guard(local_SSAt::nodet &node, const namespacet &ns) {
   exprt result = true_exprt();
 
@@ -106,10 +127,52 @@ void simplify(local_SSAt &ssa, const namespacet &ns)
         a_it++)
     {
       *a_it=simplify_expr(*a_it, ns);
+      *a_it = simplifier.simplify_expr(*a_it);
     }
   }
+  simplifier.remove_redundant_equalities(ssa);
   ssa.output_verbose(after);
 }
+
+// bool replace_expr_custom(const exprt &what, const exprt &by, exprt &dest)
+// {
+//   if(dest==what)
+//   {
+//     dest=by;
+//     return false;
+//   }
+
+//   bool result=true;
+
+//   Forall_operands(it, dest)
+//     result=replace_expr_custom(what, by, *it) && result;
+
+//   return result;
+// }
+
+// bool replace_expr_custom(const replace_mapt &what, exprt &dest, std::unordered_set<exprt, irep_hash>& used)
+// {
+//   {
+//     replace_mapt::const_iterator it=what.find(dest);
+
+//     if(it!=what.end())
+//     {
+//       dest=it->second;
+//       return false;
+//     }
+//   }
+
+//   bool result=true;
+
+//   Forall_operands(it, dest) {
+//     auto result_temp=replace_expr_custom(what, *it, used);
+//     if (!result)
+//       used.insert(*it);
+//     result = result && result_temp;
+//   }
+
+//   return result;
+// }
 
 exprt ssa_simplifiert::simplify_expr(exprt in) {
 
@@ -125,9 +188,9 @@ exprt ssa_simplifiert::simplify_expr(exprt in) {
     if (in.id() == ID_if) {
       out << "CID : " << in.op0().type().id() << "\n";
       if (simplify_expr_to(in.op0(), true_exprt()) == true_exprt()) {
-        return in.op1();
+        in =  in.op1();
       } else if (simplify_expr_to(in.op0(), false_exprt()) == false_exprt()) {
-        return in.op2();
+        in =  in.op2();
       }
     }
   } else {
@@ -189,6 +252,7 @@ exprt ssa_simplifiert::simplify_expr_recursive(exprt in) {
   return in;
 }
 
+
 exprt ssa_simplifiert::simplify_expr_to(exprt in, exprt target) {
   if (in != target) {
     solver.new_context();
@@ -213,5 +277,49 @@ void ssa_simplifiert::internalize(local_SSAt::nodet::equalitiest::iterator in) {
 void ssa_simplifiert::record(local_SSAt::nodet::equalitiest::iterator in) {
   if (map.find(in->lhs()) == map.end()) {
     map[in->lhs()] = in->rhs();
+  }
+}
+
+void ssa_simplifiert::remove_redundant_equalities(local_SSAt& ssa) {
+  auto it = ssa.nodes.rbegin();
+  bool skipped = false;
+  for(auto
+      n_it=it;
+      n_it!=ssa.nodes.rend();
+      n_it++)
+  {
+    local_SSAt::nodet &node=*n_it;
+
+    // out << "NODE\n";
+    // node.output(out, ns);
+    // out << "NODE END\n";
+
+    if (!skipped && !node.equalities.empty()) {
+      skipped = true;
+      
+      // out << "SKIP NODE\n";
+      // node.output(out, ns);
+      // out << "SKIP NODE END\n";
+      it++;
+      continue;
+    }
+
+     
+    // exprt guard = find_guard(node, ns);
+    std::vector<equal_exprt> new_vec;
+    for(local_SSAt::nodet::equalitiest::iterator
+        e_it=node.equalities.begin();
+        e_it!=node.equalities.end();
+        e_it++)
+    {
+      if ( !is_guard_s(e_it->lhs(), ns) && !is_other(e_it->lhs(), ns)) {
+        if (map.find(e_it->lhs()) == map.end()) {
+          new_vec.push_back(*e_it);
+        }
+      } else {
+        new_vec.push_back(*e_it);
+      }
+    }
+    node.equalities.swap(new_vec);
   }
 }

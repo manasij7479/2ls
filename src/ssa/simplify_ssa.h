@@ -33,6 +33,7 @@ public:
   exprt simplify_expr_recursive(exprt in);
   void internalize(local_SSAt::nodet::equalitiest::iterator in);
   void record(local_SSAt::nodet::equalitiest::iterator in);
+  void remove_redundant_equalities(local_SSAt& ssa);
 private:
   local_SSAt& SSA;
   const namespacet& ns;
@@ -40,6 +41,7 @@ private:
   std::ofstream out;
   
   replace_mapt map;
+  // std::unordered_set<exprt, irep_hash> used; 
 };
 
 #endif
