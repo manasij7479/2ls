@@ -189,7 +189,7 @@ static void replace_malloc_rec(
   if(expr.id()==ID_side_effect &&
      to_side_effect_expr(expr).get_statement()==ID_malloc)
   {
-    assert(!malloc_size.is_nil());
+    // assert(!malloc_size.is_nil());
     expr.op0()=malloc_size;
 
     expr=malloc_ssa(to_side_effect_expr(expr),
