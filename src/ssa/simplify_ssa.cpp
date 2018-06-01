@@ -99,19 +99,16 @@ void simplify(local_SSAt &ssa, const namespacet &ns)
     {
       
       // if (options.get_bool_option("simplify-ssa")) {
-
-
       
-      
-      simplifier.internalize(e_it);
-      if (e_it->rhs().id() != ID_constant && e_it->rhs().id() != ID_symbol
-          && e_it->rhs().type().id() != ID_pointer) {
-        simplifier.simplify_expr(e_it->rhs());
-      }
-      if (e_it->rhs().id() != ID_if) {
-        simplifier.record(e_it);
-      }
-      simplifier.replace(e_it->rhs());
+      // simplifier.internalize(e_it);
+      // if (e_it->rhs().id() != ID_constant && e_it->rhs().id() != ID_symbol
+      //     && e_it->rhs().type().id() != ID_pointer) {
+      //   simplifier.simplify_expr(e_it->rhs());
+      // }
+      // if (e_it->rhs().id() != ID_if) {
+      //   simplifier.record(e_it);
+      // }
+      // simplifier.replace(e_it->rhs());
 
 
       e_it->lhs()=simplify_expr(e_it->lhs(), ns);
@@ -137,7 +134,7 @@ void simplify(local_SSAt &ssa, const namespacet &ns)
         a_it!=node.assertions.end();
         a_it++)
     {
-      simplifier.simplify_expr(*a_it);
+      // simplifier.simplify_expr(*a_it);
       *a_it=simplify_expr(*a_it, ns);
     }
   }
@@ -191,7 +188,7 @@ void ssa_simplifiert::simplify_expr(exprt &in) {
   auto T = true_exprt();
   auto F = false_exprt();
 
-  out << "TRY: " << from_expr(ns, "", in) << "\n";
+  // out << "TRY: " << from_expr(ns, "", in) << "\n";
   if (in.type().id() == ID_bool) {
     // if (not_simplifiable.find(in) != not_simplifiable.end()) {
     //   out << "BINGO\n";
@@ -220,18 +217,17 @@ void ssa_simplifiert::simplify_expr(exprt &in) {
       }
     }
   } else {
-    out << "BADTYPE : " <<  in.type().id() << " : " << from_expr(ns, "", in) << "\n";
+    // out << "BADTYPE : " <<  in.type().id() << " : " << from_expr(ns, "", in) << "\n";
   }
 
 }
 
 exprt ssa_simplifiert::simplify_expr_cs(exprt in, exprt context) {
-  exprt result;
   solver.new_context();
   solver << context;
   simplify_expr(in);
   solver.pop_context();
-  return result;
+  return in;
 }
 
 exprt ssa_simplifiert::simplify_expr_recursive(exprt in) {

@@ -50,6 +50,7 @@ Author: Daniel Kroening, Peter Schrammel
 #include "2ls_parse_options.h"
 #include "summary_checker_ai.h"
 #include "summary_checker_bmc.h"
+#include "summary_checker_intbmc.h"
 #include "summary_checker_kind.h"
 #include "show.h"
 #include "horn_encoding.h"
@@ -302,6 +303,12 @@ void twols_parse_optionst::get_command_line_options(optionst &options)
       throw "--bmc only possible with --unwind";
   }
 
+  if (cmdline.isset("interprocedural-bmc")) {
+    options.set_option("interprocedural-bmc", true);
+    if(!cmdline.isset("unwind"))
+      throw "--interprocedural-bmc only possible with --unwind";
+  }
+
   // check for spuriousness of assertion failures
   if(cmdline.isset("no-spurious-check"))
     options.set_option("spurious-check", false);
@@ -506,22 +513,26 @@ int twols_parse_optionst::doit()
     }
 
     std::unique_ptr<summary_checker_baset> checker;
-    if(!options.get_bool_option("k-induction") &&
-       !options.get_bool_option("incremental-bmc") &&
-       !options.get_bool_option("bmc"))
+    if (options.get_bool_option("interprocedural-bmc")) {
       checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_ait(options));
-    if(options.get_bool_option("k-induction") &&
-       !options.get_bool_option("incremental-bmc") &&
-       !options.get_bool_option("bmc"))
-      checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_kindt(options));
-    if(!options.get_bool_option("k-induction") &&
-       (options.get_bool_option("incremental-bmc") ||
-        options.get_bool_option("bmc")))
-      checker=std::unique_ptr<summary_checker_baset>(
-        new summary_checker_bmct(options));
-
+          new summary_checker_intbmct(options));
+    } else {
+      if(!options.get_bool_option("k-induction") &&
+         !options.get_bool_option("incremental-bmc") &&
+         !options.get_bool_option("bmc"))
+        checker=std::unique_ptr<summary_checker_baset>(
+          new summary_checker_ait(options));
+      if(options.get_bool_option("k-induction") &&
+         !options.get_bool_option("incremental-bmc") &&
+         !options.get_bool_option("bmc"))
+        checker=std::unique_ptr<summary_checker_baset>(
+          new summary_checker_kindt(options));
+      if(!options.get_bool_option("k-induction") &&
+         (options.get_bool_option("incremental-bmc") ||
+          options.get_bool_option("bmc")))
+        checker=std::unique_ptr<summary_checker_baset>(
+          new summary_checker_bmct(options));
+    }
     checker->set_message_handler(get_message_handler());
     checker->simplify=!cmdline.isset("no-simplify");
     checker->fixed_point=!cmdline.isset("no-fixed-point");

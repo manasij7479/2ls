@@ -1,0 +1,73 @@
+Simplifier Implementation for Context Sensitive BMC
+---------------------------------
+1. SSA Simplification
+
+  Done in simplify_ssa{.h, .cpp}
+  New ssa_simplifiert class, which can also be used to simplify arbitrary expressions.
+
+  This is how it works : 
+
+  1.1. Try to simplify the RHS of each Equality in the SSA
+    This involves two calls to incremental_solver, SAT(Not(Expr == TRUE)) and SAT(Not(Expr == FALSE)). If UNSAT, Expr can be replaced with TRUE and FALSE respectively.
+
+    This is currently not done recursively, i.e. subexpressions are not simplified.
+    
+    Example transformation achieved :
+    Before : (E) $guard#8 == ($guard#6 && $cond#7)
+    After  : (E) $guard#8 == FALSE 
+    
+    TODO
+    1.1.1. Rigorous Benchmarking. I am currently using the benchmarks from :
+      https://github.com/kumarmadhukar/2ls/tree/atva17/atva17_experiments/svcomp17_product-lines_false
+      What other benchmarks should I test this with?
+
+    1.1.2. Assorted tweaks to improve performance. For example, it should be possible to pinpoint simplification opportunities and significantly reduce the number of SAT solver invocations.
+
+  1.2. Eliminate intermediate variables which are not part of the interface
+
+    Equalities are stored in a hash table and replaced within expressions which do not involve ITEs.
+
+    Example transformation achieved (with both 1.1. and 1.2 enabled):
+    
+    Before : (E) foo#return_value#phi11 == ($guard#10 ? foo#return_value#10 : ($guard#8 && $cond#9 ? foo#return_value#8 : foo#return_value#3))
+
+    After  : (E) foo#return_value#phi11 == ($cond#9 && $guard#8 ? -1 + x : 2 + x)
+
+    TODO
+    1.2.1. Benchmark. Does this actually help?
+    1.2.2. Ideal balance balance between simplification achieved and result expr sizes.
+    1.2.3. Efficient way to figure out what can be eliminated after this step.
+
+---------------------------------
+
+2. Context Sensitive Summary Simplification
+
+  2.1. Whole summary simplification
+    Simplify summaries when summaries are recursively computed.
+
+    Modify compute_summary_rec in each summarizer_*.cpp as required for benchmarks.
+
+    TODO
+    2.1.1. Modify summary_dbt to maintain summaries for each context separately. Does this make sense?  
+    2.1.2. Inline context appropriate summaries instead of the accumulated summary.
+    2.1.3. Construct an appropriate example.
+
+  2.2. (TODO) Predicate simplification at each step of WP/SP
+    2.2.1. Modify do_summary for each summarizer
+    2.2.2. Figure out how to switch from range summaries to precise predicates.
+
+---------------------------------
+
+3. Here are some questins about how the new architecture might affect the above steps:
+
+  3.1. Am I correct to assume that local_SSAt will have minimal or no design changes?
+
+  3.2. Can the simplifier work on the refinement specification? If that layer has guards and expressions similar to the SSA, it should be possible.
+
+  3.3. Will there be more simplification opportunities readily available if the simplification is done on the refinement spec because of higher level structural information?
+
+  3.4. If you are proposing that unwinding be done on the normalized goto programs, does it make sense to do some simplification on that level too? Note that the current simplifier implementation I have works on unwound SSA just as well.
+
+  3.5. What parts of the current summarizer infrasctucture do you think will be reimplemented?
+
+  3.6. In general, how should I focus the simplification efforts on the current codebase so that they can be readily ported over to the new architecture?

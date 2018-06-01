@@ -338,6 +338,7 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
 #if 0
   std::cout << "id: " << s << std::endl;
 #endif
+  bool argflag = false;
   std::size_t pos2=s.find("%");
   std::size_t pos1=s.find_last_of("#");
   if(pos1==std::string::npos)
@@ -350,6 +351,11 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
     pos1+=2;
   else if(s.substr(pos1+1, 3)=="phi")
     pos1+=3;
+  else if(s.substr(pos1+1, 3)=="arg") {
+    pos2 = pos1--;
+    while (s[pos1] != '#') {pos1--;}
+    argflag = true;
+  }
   else if((pos2==pos1+13) && (s.substr(pos1+1, 12)=="return_value"))
     return irep_idt(s);
 #if 0
@@ -358,7 +364,7 @@ irep_idt unwindable_local_SSAt::get_ssa_name(
 #endif
   loc=get_location(
     safe_string2unsigned(s.substr(pos1+1, pos2-pos1-1)));
-  return irep_idt(s.substr(0, pos2));
+  return irep_idt(s.substr(0, argflag?s.size():pos2));
 }
 
 /*******************************************************************\

@@ -33,6 +33,13 @@ public:
   bool simplify_expr_to(exprt &in, exprt target);
   exprt simplify_expr_recursive(exprt in);
   void internalize(local_SSAt::nodet::equalitiest::iterator in);
+  void internalize(local_SSAt& SSA, std::string name) {
+    if (ssa_cached.find(name) == ssa_cached.end()) {
+      solver << SSA.get_enabling_exprs();
+      solver << SSA;
+      ssa_cached.insert(name);
+    }
+  }
   void record(local_SSAt::nodet::equalitiest::iterator in);
   void remove_redundant_equalities(local_SSAt& ssa);
   void replace(exprt &in);
@@ -43,6 +50,7 @@ private:
   std::ofstream out;
   
   replace_mapt map;
+  std::set<std::string> ssa_cached;
   // std::unordered_set<exprt, irep_hash> used;
   // struct expr_string_hash {
   //   expr_string_hash(const namespacet& ns_) : ns(ns_) {}
