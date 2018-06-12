@@ -62,6 +62,8 @@ Author: Daniel Kroening, Peter Schrammel
 #define EXPLICIT_NONDET_LOCALS 0
 #define FILTER_ASSERTIONS 1
 
+double simptime = 0;
+
 /*******************************************************************\
 
 Function: twols_parse_optionst::twols_parse_optionst
@@ -615,7 +617,6 @@ int twols_parse_optionst::doit()
     default:
       assert(false);
     }
-
     if(cmdline.isset("instrument-output"))
     {
       checker->instrument_and_output(goto_model);
@@ -1309,7 +1310,7 @@ Function: twols_parse_optionst::report_success
 
 void twols_parse_optionst::report_success()
 {
-  result() << "VERIFICATION SUCCESSFUL" << eom;
+  result() << "VERIFICATION SUCCESSFUL\n" << simptime << eom;
 
   switch(get_ui())
   {
@@ -1493,7 +1494,7 @@ Function: twols_parse_optionst::report_failure
 
 void twols_parse_optionst::report_failure()
 {
-  result() << "VERIFICATION FAILED" << eom;
+  result() << "VERIFICATION FAILED\n" << simptime << eom;
 
   switch(get_ui())
   {
@@ -1528,7 +1529,7 @@ Function: twols_parse_optionst::report_unknown
 
 void twols_parse_optionst::report_unknown()
 {
-  result() << "VERIFICATION INCONCLUSIVE" << eom;
+  result() << "VERIFICATION INCONCLUSIVE\n" << simptime << eom;
 
   switch(get_ui())
   {

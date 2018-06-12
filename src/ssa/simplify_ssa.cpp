@@ -13,8 +13,12 @@ Author: Daniel Kroening, kroening@kroening.com
 #include <util/std_expr.h>
 #include <util/arith_tools.h>
 #include <util/expr_util.h>
-// #include "2ls/2ls_parse_options.h"
+#include "2ls/2ls_parse_options.h"
 #include <fstream>
+#include <chrono>
+#include <ctime>
+#include <ratio>
+
 
 /*******************************************************************\
 
@@ -77,7 +81,9 @@ void simplify(local_SSAt &ssa, const namespacet &ns)
 {
   auto name =ssa.goto_function;
 
-  // std::ofstream before("/tmp/before.txt", std::fstream::app);
+
+  std::ofstream before("/tmp/before.txt", std::fstream::app);
+
   // std::ofstream after("/tmp/after.txt", std::fstream::app);
 
   // ssa.output_verbose(before);
@@ -111,14 +117,29 @@ void simplify(local_SSAt &ssa, const namespacet &ns)
       // simplifier.replace(e_it->rhs());
 
 
+
       e_it->lhs()=simplify_expr(e_it->lhs(), ns);
+      // if (options.get_bool_option("simplify-ssa")) {
+      
+      std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+//       simplifier.internalize(e_it);
+//       simplifier.simplify_expr(e_it->rhs());
+      
       e_it->rhs()=simplify_expr(e_it->rhs(), ns);
+
 
       // if (!is_guard_s(e_it->lhs(), ns)) {
       //   e_it->rhs() = simplifier.simplify_expr_cs(e_it->rhs(), guard);
       // }
       // }
 
+
+
+      std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+      std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+      before << simptime << '\n';
+      simptime += time_span.count();
+      
     }
 
     for(local_SSAt::nodet::constraintst::iterator
@@ -190,20 +211,21 @@ void ssa_simplifiert::simplify_expr(exprt &in) {
 
   // out << "TRY: " << from_expr(ns, "", in) << "\n";
   if (in.type().id() == ID_bool) {
+
     // if (not_simplifiable.find(in) != not_simplifiable.end()) {
     //   out << "BINGO\n";
     // }
-    if (in != T && in != F) {
-
-      auto success = simplify_expr_to(in, T);
-      if (!success) { 
-        success = simplify_expr_to(in, F) && success;
-      }
-      // if (!success) {
-      //   not_simplifiable.insert(in);
-      //   out << "NOSIMP-ENTRY : " << from_expr(ns, "", in) << "\n";
-      // }
-    }
+//     if (in != T && in != F) {
+// 
+//       auto success = simplify_expr_to(in, T);
+//       if (!success) { 
+//         success = simplify_expr_to(in, F) && success;
+//       }
+//       // if (!success) {
+//       //   not_simplifiable.insert(in);
+//       //   out << "NOSIMP-ENTRY : " << from_expr(ns, "", in) << "\n";
+//       // }
+//     }
   } else if (in.type().id() == ID_signedbv || in.type().id() == ID_unsignedbv) {
 
     // in = simplify_expr_to(in, gen_zero(in.type()));

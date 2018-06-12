@@ -41,10 +41,10 @@ Author: Peter Schrammel
 #include "summary_checker_base.h"
 #include "../domains/incremental_solver.h"
 #include <solvers/smt2/smt2_dec.h>
-#include <solvers/smt2/z3_conv.h>
+// #include <solvers/smt2/z3_conv.h>
 
 #include <unordered_set>
-#include <z3++.h>
+// #include <z3++.h>
 
 // typedef enum { D_SATISFIABLE, D_UNSATISFIABLE, D_ERROR } resultt;
 template <typename solvert>
@@ -86,6 +86,7 @@ bool is_guard(exprt e, const namespacet &ns) {
 }
 
 void CustomSSAOperation(local_SSAt &SSA, const namespacet &ns, const dstring name) {
+
   std::ofstream out("output.txt");
   // out << "Custom SSA hook : " << name <<" \n";
   // // incremental_solvert solver(ns);
@@ -154,6 +155,62 @@ void CustomSSAOperation(local_SSAt &SSA, const namespacet &ns, const dstring nam
   equal_exprt e((*c_it).op0(),s);
   
   solver<<e;
+
+//   std::ofstream out("output.txt");
+//   out << "Custom SSA hook : " << name <<" \n";
+//   // incremental_solvert solver(ns);
+//   z3::set_param("proof", "true"); 
+//   z3_convt solver(ns);
+//   // smt2_dect solver(ns, "accelerate", "", "", smt2_dect::Z3);
+// 
+//   solver << SSA;
+//   solver << SSA.get_enabling_exprs();
+// 
+//   for(local_SSAt::nodest::const_iterator n_it=SSA.nodes.begin();
+//       n_it!=SSA.nodes.end(); n_it++)
+//   {
+// 
+//     for(local_SSAt::nodet::assertionst::const_iterator
+//           c_it=n_it->assertions.begin();
+//           c_it!=n_it->assertions.end();
+//         c_it++)
+//     {
+//       out << from_expr(ns, " ", *c_it) << std::endl;
+//       auto e = *c_it;
+//       if (e.operands().size() == 2)
+//       {
+//         auto e0 = c_it->op0();
+//         auto e1 = c_it->op1();
+//         if (is_guard(e0, ns)) {
+//           e1 = not_exprt(e1);
+//         } else if (is_guard(e1, ns)) {
+//           e0 = not_exprt(e0);
+//         } else {
+//           throw 42;
+//         }
+//         e = or_exprt(e0, e1);
+//       }
+//       out << "ASSERT: " << from_expr(ns, " ", e) << "\n";
+//       solver << e;
+//     }
+// 
+//   }
+//   if (solver() == D_SATISFIABLE) {
+//     out << "sat\nModel:\n";
+// 
+//     for(local_SSAt::nodest::const_iterator n_it=
+//         SSA.nodes.begin(); n_it!=SSA.nodes.end(); n_it++)
+//     {
+//       for(local_SSAt::nodet::equalitiest::const_iterator e_it=
+//             n_it->equalities.begin(); e_it!=n_it->equalities.end(); e_it++)
+//       {
+//         print_symbol_values(SSA, solver, out, *e_it);
+//       }
+//     }
+// 
+//   } else {
+//     out << "unsat\n";
+//   }
 }
 
 /*******************************************************************\

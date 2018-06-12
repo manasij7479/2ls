@@ -19,7 +19,7 @@ Author: Daniel Kroening, Peter Schrammel
 
 class goto_modelt;
 class optionst;
-
+extern double simptime;
 #include "summary_checker_base.h"
 
 #define TWOLS_OPTIONS \

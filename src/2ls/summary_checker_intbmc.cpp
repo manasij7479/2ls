@@ -49,7 +49,7 @@ exprt summary_checker_intbmct::compute_wp(exprt pred, local_SSAt &ssa,
   for (; p != ssa.params.end(); ++p, ++a) {
     simp_context = and_exprt(simp_context, equal_exprt(*a, *p));
   }
-  out << "SIMPCON " << from_expr(ns, "", simp_context) << std::endl;
+//   out << "SIMPCON " << from_expr(ns, "", simp_context) << std::endl;
 
   // out << "RET " << from_expr(ns, "", *rets.begin()) << std::endl;
    
@@ -115,17 +115,17 @@ exprt summary_checker_intbmct::compute_wp(exprt pred, local_SSAt &ssa,
         //   out << "PARAM: " << from_expr(ns, "", param) << "\n";
         // }
 
-        out << "WP F1 = " << from_expr(ns, "", WP) << "\n";
+//         out << "WP F1 = " << from_expr(ns, "", WP) << "\n";
 
         exprt guard = ssa.guard_symbol(loc);
-        out << "G : " << from_expr(ns, "", guard) << std::endl;
+//         out << "G : " << from_expr(ns, "", guard) << std::endl;
 
         WP = compute_wp(WP, callee, out, cs_globals_in,
           e_it->arguments(), guard, simp, simp_context);
 
-        out << "WP F2 = " << from_expr(ns, "", WP) << "\n";
+//         out << "WP F2 = " << from_expr(ns, "", WP) << "\n";
 
-        out << "WP F3= " << from_expr(ns, "", WP) << "\n";
+// //         out << "WP F3= " << from_expr(ns, "", WP) << "\n";
 
 
 // #endif
@@ -148,21 +148,22 @@ exprt summary_checker_intbmct::compute_wp(exprt pred, local_SSAt &ssa,
         auto target = e_it->rhs();
         if (e_it->rhs().id() == ID_if) {
 
-          out << "SIMP " << from_expr(ns, "", target) << '\t' << from_expr(ns, "", guard) << std::endl;
+//           out << "SIMP " << from_expr(ns, "", target) << '\t' << from_expr(ns, "", guard) << std::endl;
 
-          auto c = simp->simplify_expr_cs(target.op0(), and_exprt(guard, simp_context));
-          if (c == true_exprt()) {
-            target = target.op1();
-          } else if (c == false_exprt()) {
-            target = target.op2();
-          }
+          // FIXME ENABLE AFTER BENCHMAR NOSIMP
+//           auto c = simp->simplify_expr_cs(target.op0(), and_exprt(guard, simp_context));
+//           if (c == true_exprt()) {
+//             target = target.op1();
+//           } else if (c == false_exprt()) {
+//             target = target.op2();
+//           }
         }
 
         if (WP != true_exprt() && WP != false_exprt()) {
           replace_expr(e_it->lhs(), target, WP);
         }
       }
-      out << "WP = " << from_expr(ns, "", WP) << "\n";
+//       out << "WP = " << from_expr(ns, "", WP) << "\n";
 
       // out << "DIAG: " << e_it->rhs().id() << '\t' << e_it->rhs().type().id() << "\n";
       // out << "REND\n";
@@ -231,8 +232,8 @@ void print_symbol_values(
   {
     auto name = to_symbol_expr(expr).get_identifier();
     if (seen.find(name) == seen.end()) {
-      out << from_expr(SSA.ns, "", expr) << "=="
-        << from_expr(SSA.ns, "", solver.get(expr)) << "\n";
+//       out << from_expr(SSA.ns, "", expr) << "=="
+//         << from_expr(SSA.ns, "", solver.get(expr)) << "\n";
     }
     seen.insert(name);
     return;
@@ -264,7 +265,7 @@ property_checkert::resultt summary_checker_intbmct::check_properties_simple() {
 
   if (solver() == D_SATISFIABLE) {
 
-    out << "sat\nModel:\n";
+//     out << "sat\nModel:\n";
 
     for(local_SSAt::nodest::const_iterator n_it=
         ssa.nodes.begin(); n_it!=ssa.nodes.end(); n_it++)
