@@ -1,8 +1,8 @@
 /*******************************************************************\
 
-Module: Summary Checker for BMC
+Module: Interprocedural Summary Checker for BMC
 
-Author: Peter Schrammel
+Author: Manasij Mukherjee
 
 \*******************************************************************/
 
@@ -24,7 +24,7 @@ public:
 
   property_checkert::resultt check_properties_simple();
 
-  exprt compute_wp(exprt pred, local_SSAt& ssa, std::ostream& out,
+  exprt compute_wp(exprt pred, local_SSAt& ssa,
   	local_SSAt::var_sett rets, std::vector<exprt> args,
   	exprt guard, ssa_simplifiert* simp, exprt simp_context);
 
